@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#081210" />
+  <meta name="description" content="HelixPulse — an interactive educational DNA sequence feature extraction and classification workbench." />
+  <title>HelixPulse — Genomic Sequence Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="glow-orb orb-left" aria-hidden="true"></div>
+  <div class="glow-orb orb-right" aria-hidden="true"></div>
+
+  <header class="navbar">
+    <div class="nav-inner">
+      <a class="logo" href="#top" aria-label="HelixPulse Home">
+        <span class="logo-badge">HP</span>
+        <span class="logo-word">Helix<span class="logo-accent">Pulse</span></span>
+      </a>
+
+      <nav class="nav-links" aria-label="Primary sections">
+        <a href="#workbench" class="active">Workbench</a>
+        <a href="#classifier">Classifier</a>
+        <a href="#reference-set">Reference Set</a>
+        <a href="#methodology">Methodology</a>
+      </nav>
+
+      <div class="nav-controls">
+        <span class="engine-pill"><i class="pulse-dot"></i> ENGINE READY</span>
+        <button id="modeToggle" class="theme-btn" type="button" title="Switch color theme" aria-label="Switch color theme">
+          <span id="modeIcon">☀</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" id="top">
+    <!-- Hero Banner -->
+    <section class="intro-banner">
+      <div class="intro-copy">
+        <div class="tag-line">BIOINFORMATICS LAB · MODULE 01</div>
+        <h1>Decode nucleotide patterns with <span class="highlight">precision.</span></h1>
+        <p class="lead">
+          Extract base frequencies, compute GC ratios, and inspect a transparent decision-tree boundary across four reference DNA sequences.
+        </p>
+        <div class="cta-group">
+          <a href="#workbench" class="btn-solid">Launch Sequence Lab <span>→</span></a>
+          <a href="#reference-set" class="btn-outline">Inspect Training Set</a>
+        </div>
+      </div>
+
+      <aside class="kpi-cluster" aria-label="Dataset summary metrics">
+        <div class="kpi-box">
+          <span class="kpi-label">TRAINING SAMPLES</span>
+          <strong class="kpi-val" id="totalSamples">04</strong>
+          <span class="kpi-sub">Labelled reference strands</span>
+        </div>
+        <div class="kpi-box">
+          <span class="kpi-label">EXTRACTED METRICS</span>
+          <strong class="kpi-val">06</strong>
+          <span class="kpi-sub">A, T, G, C counts + Length + GC%</span>
+        </div>
+        <div class="kpi-box">
+          <span class="kpi-label">TARGET CLASSES</span>
+          <strong class="kpi-val">02</strong>
+          <span class="kpi-sub">Group A vs. Group B</span>
+        </div>
+        <div class="kpi-box accent-box">
+          <span class="kpi-label">DECISION SPLIT</span>
+          <strong class="kpi-val">56.25%</strong>
+          <span class="kpi-sub">GC content threshold rule</span>
+        </div>
+      </aside>
+    </section>
+
+    <!-- Section 1: Sequence Workbench -->
+    <section class="block" id="workbench">
+      <div class="block-head">
+        <div>
+          <span class="step-tag">STEP 01 · EXTRACTION</span>
+          <h2>Sequence Workbench</h2>
+        </div>
+        <p>Input any DNA strand containing Adenine (A), Thymine (T), Guanine (G), and Cytosine (C).</p>
+      </div>
+
+      <div class="workbench-grid">
+        <!-- Input Card -->
+        <div class="card input-card">
+          <div class="card-top">
+            <div>
+              <span class="card-eyebrow">STRAND INPUT</span>
+              <h3>Nucleotide Editor</h3>
+            </div>
+            <span id="validationBadge" class="status-chip ok">VALID STRAND</span>
+          </div>
+
+          <div class="editor-wrap">
+            <label for="dnaField" class="sr-only">DNA Sequence Input</label>
+            <textarea id="dnaField" rows="4" maxlength="5000" spellcheck="false" placeholder="Enter A, T, G, C bases...">ATGCGCGATC</textarea>
+            <div class="editor-meta">
+              <span id="baseCounter">10 bp</span>
+              <span>Allowed: A, T, G, C</span>
+            </div>
+          </div>
+
+          <div class="preset-bar">
+            <span class="preset-label">PRESETS:</span>
+            <button type="button" class="preset-btn" data-seq="ATGCGATC" data-name="S1">S1 (Group A)</button>
+            <button type="button" class="preset-btn" data-seq="ATGCGTAC" data-name="S2">S2 (Group A)</button>
+            <button type="button" class="preset-btn" data-seq="GCGCGTAT" data-name="S3">S3 (Group B)</button>
+            <button type="button" class="preset-btn" data-seq="GCGCGCGC" data-name="S4">S4 (Group B)</button>
+            <button type="button" class="preset-btn active-preset" data-seq="ATGCGCGATC" data-name="Unknown">Unknown Query</button>
+          </div>
+
+          <div class="action-bar">
+            <button type="button" id="runBtn" class="btn-solid flex-grow">Extract &amp; Classify</button>
+            <button type="button" id="resetBtn" class="btn-ghost">Clear</button>
+          </div>
+          <p class="disclaimer-line">Educational simulation only. Do not enter private or clinical genomic data.</p>
+        </div>
+
+        <!-- Fingerprint Card -->
+        <div class="card metrics-card">
+          <div class="card-top">
+            <div>
+              <span class="card-eyebrow">FEATURE VECTOR</span>
+              <h3>Compositional Fingerprint</h3>
+            </div>
+            <span id="activePresetTag" class="mono-tag">QUERY: UNKNOWN</span>
+          </div>
+
+          <div class="summary-strip">
+            <div class="summary-item">
+              <span>TOTAL LENGTH</span>
+              <strong id="outLength">10 <small>bp</small></strong>
+            </div>
+            <div class="summary-item">
+              <span>GC CONTENT</span>
+              <strong id="outGc">60.00 <small>%</small></strong>
+            </div>
+            <div class="summary-item">
+              <span>AT CONTENT</span>
+              <strong id="outAt">40.00 <small>%</small></strong>
+            </div>
+          </div>
+
+          <!-- Segmented Proportion Bar -->
+          <div class="spectrum-section">
+            <div class="spectrum-header">
+              <span>PROPORTIONAL BASE SPECTRUM</span>
+              <span id="spectrumSummary">A:20% · T:20% · G:30% · C:30%</span>
+            </div>
+            <div class="spectrum-bar" role="img" aria-label="Base proportion bar">
+              <div id="segA" class="seg seg-a" style="width: 20%"></div>
+              <div id="segT" class="seg seg-t" style="width: 20%"></div>
+              <div id="segG" class="seg seg-g" style="width: 30%"></div>
+              <div id="segC" class="seg seg-c" style="width: 30%"></div>
+            </div>
+          </div>
+
+          <!-- Individual Base Rows -->
+          <div class="base-rows">
+            <div class="base-row">
+              <div class="base-info"><i class="swatch sw-a"></i><span>Adenine (A)</span></div>
+              <div class="base-track"><div id="fillA" class="base-fill sw-a" style="width: 20%"></div></div>
+              <strong id="valA" class="base-num">2</strong>
+            </div>
+            <div class="base-row">
+              <div class="base-info"><i class="swatch sw-t"></i><span>Thymine (T)</span></div>
+              <div class="base-track"><div id="fillT" class="base-fill sw-t" style="width: 20%"></div></div>
+              <strong id="valT" class="base-num">2</strong>
+            </div>
+            <div class="base-row">
+              <div class="base-info"><i class="swatch sw-g"></i><span>Guanine (G)</span></div>
+              <div class="base-track"><div id="fillG" class="base-fill sw-g" style="width: 30%"></div></div>
+              <strong id="valG" class="base-num">3</strong>
+            </div>
+            <div class="base-row">
+              <div class="base-info"><i class="swatch sw-c"></i><span>Cytosine (C)</span></div>
+              <div class="base-track"><div id="fillC" class="base-fill sw-c" style="width: 30%"></div></div>
+              <strong id="valC" class="base-num">3</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Classification & Threshold -->
+    <section class="block" id="classifier">
+      <div class="block-head">
+        <div>
+          <span class="step-tag">STEP 02 · INFERENCE</span>
+          <h2>Decision-Tree Rule Evaluator</h2>
+        </div>
+        <p>Visualizing how a single GC-content threshold separates Group A from Group B on the assignment dataset.</p>
+      </div>
+
+      <div class="classifier-grid">
+        <div class="card verdict-card">
+          <div class="card-top">
+            <div>
+              <span class="card-eyebrow">PREDICTED CLASS</span>
+              <h3>Classification Output</h3>
+            </div>
+            <span class="mono-tag">1-SPLIT RULE</span>
+          </div>
+
+          <div class="verdict-hero">
+            <div id="classBadge" class="class-emblem group-b">B</div>
+            <div class="verdict-text">
+              <span class="verdict-kicker">ASSIGNED CATEGORY</span>
+              <h4 id="classTitle">Group B</h4>
+              <p id="classDetail">GC content (60.00%) exceeds the 56.25% decision boundary.</p>
+            </div>
+          </div>
+
+          <!-- Threshold Gauge -->
+          <div class="threshold-box">
+            <div class="threshold-labels">
+              <span>0% (Group A Zone)</span>
+              <span class="split-label">Split: 56.25%</span>
+              <span>100% (Group B Zone)</span>
+            </div>
+            <div class="threshold-rail">
+              <div class="zone-a"></div>
+              <div class="zone-b"></div>
+              <div class="split-marker" style="left: 56.25%"></div>
+              <div id="gcPointer" class="gc-pointer" style="left: 60%">
+                <span id="pointerTag">60.0%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="academic-alert">
+            <strong>Academic Note:</strong> This browser rule mirrors a single-node threshold on 4 training rows. Because the unknown query's true label is unprovided and sample size is minimal, this does not represent validated predictive accuracy.
+          </div>
+        </div>
+
+        <!-- Vertical Bar Chart -->
+        <div class="card chart-card">
+          <div class="card-top">
+            <div>
+              <span class="card-eyebrow">DISTRIBUTION</span>
+              <h3>Relative Nucleotide Share</h3>
+            </div>
+            <span class="mono-tag">PERCENTAGE (%)</span>
+          </div>
+
+          <div class="vchart-wrap">
+            <div class="vchart-y">
+              <span>100%</span>
+              <span>75%</span>
+              <span>50%</span>
+              <span>25%</span>
+              <span>0%</span>
+            </div>
+            <div class="vchart-plot">
+              <div class="vchart-lines"><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="vchart-cols">
+                <div class="vcol">
+                  <span class="vcol-pct" id="pctLabelA">20%</span>
+                  <div class="vcol-bar sw-a" id="colA" style="height: 20%"></div>
+                  <span class="vcol-name">A</span>
+                </div>
+                <div class="vcol">
+                  <span class="vcol-pct" id="pctLabelT">20%</span>
+                  <div class="vcol-bar sw-t" id="colT" style="height: 20%"></div>
+                  <span class="vcol-name">T</span>
+                </div>
+                <div class="vcol">
+                  <span class="vcol-pct" id="pctLabelG">30%</span>
+                  <div class="vcol-bar sw-g" id="colG" style="height: 30%"></div>
+                  <span class="vcol-name">G</span>
+                </div>
+                <div class="vcol">
+                  <span class="vcol-pct" id="pctLabelC">30%</span>
+                  <div class="vcol-bar sw-c" id="colC" style="height: 30%"></div>
+                  <span class="vcol-name">C</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Reference Dataset -->
+    <section class="block" id="reference-set">
+      <div class="block-head">
+        <div>
+          <span class="step-tag">STEP 03 · REFERENCE LIBRARY</span>
+          <h2>Supplied Training Dataset</h2>
+        </div>
+        <p>Click any sample row to load its sequence directly into the workbench, or export the full feature matrix.</p>
+      </div>
+
+      <div class="card table-card">
+        <div class="table-header">
+          <div class="filter-pills" role="group" aria-label="Filter training records">
+            <button type="button" class="filter-btn active" data-filter="ALL">All (4)</button>
+            <button type="button" class="filter-btn" data-filter="Group A">Group A (2)</button>
+            <button type="button" class="filter-btn" data-filter="Group B">Group B (2)</button>
+          </div>
+          <button type="button" id="exportCsvBtn" class="btn-outline small-btn">↓ Export Feature Table (.csv)</button>
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>SEQUENCE</th>
+                <th>A / T / G / C</th>
+                <th>LENGTH</th>
+                <th>GC CONTENT</th>
+                <th>GROUP LABEL</th>
+                <th>ACTION</th>
+              </tr>
+            </thead>
+            <tbody id="trainingTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Methodology & Notes -->
+    <section class="block" id="methodology">
+      <div class="block-head">
+        <div>
+          <span class="step-tag">STEP 04 · CONCEPTS</span>
+          <h2>Computational Biology Notes</h2>
+        </div>
+        <p>Key concepts and methodological boundaries for your assignment write-up.</p>
+      </div>
+
+      <div class="notes-layout">
+        <article class="card info-tile">
+          <span class="tile-num">01</span>
+          <h3>GC Content Ratio</h3>
+          <p>Calculated as <code>((G + C) / Length) × 100</code>. GC base pairs form three hydrogen bonds compared to two in AT pairs, influencing DNA thermal stability and serving as a classic baseline genomic feature.</p>
+        </article>
+        <article class="card info-tile">
+          <span class="tile-num">02</span>
+          <h3>Small-Sample Overfitting</h3>
+          <p>With only four labelled training sequences (S1–S4), a single split at 56.25% achieves 100% training separation. However, four observations cannot establish statistical generalization to unseen genomes.</p>
+        </article>
+        <article class="card info-tile">
+          <span class="tile-num">03</span>
+          <h3>Companion Scope</h3>
+          <p>This web interface serves as an interactive visual aid alongside your required Python / Google Colab <code>DecisionTreeClassifier</code> implementation. Not intended for clinical or diagnostic decisions.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span class="logo"><span class="logo-badge">HP</span> Helix<span class="logo-accent">Pulse</span></span>
+      <span>Educational Genomic Feature Explorer · Non-Clinical Demo</span>
+    </div>
+  </footer>
+
+  <div id="statusToast" class="toast-banner" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
